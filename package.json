@@ -1,0 +1,19 @@
+{
+  "name": "jdrbot",
+  "version": "1.0.0",
+  "description": "A bot for playing RPG over muh discord server.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "rpg"
+  ],
+  "author": "Et0san",
+  "license": "GPL-3.0-or-later",
+  "dependencies": {
+    "discord.js": "^12.0.2"
+  }
+}
