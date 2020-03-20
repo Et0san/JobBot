@@ -13,10 +13,10 @@ client.once('ready', () => {
 
 client.on('message', message => {
 	if(!message.author.bot){
-		if(message.content.match('\\.me .+')){
+		if(message.content.match(/\.me .+/)){
 			if(Math.floor(Math.random()*2)==0){
 				if(message.author.username === 'nullpo'){
-					message.channel.send('Oui, c\'est toi ! Le seul et l\'unique !');
+					mySend(message.channel, 'Oui, c\'est toi ! Le seul et l\'unique !');
 				} else {
 					let mess = Math.floor(Math.random()*6);
 					switch(mess){
@@ -27,52 +27,77 @@ client.on('message', message => {
 						case 4: mess = 'a l\'oeil lubrique.';break;
 						default: mess = 'a gagné ~~au loto~~ le droit de rejouer.';break;
 					}
-					message.channel.send('*' + message.member.displayName + ' ' + mess + '*');
+					mySend(message.channel, '*' + message.member.displayName + ' ' + mess + '*');
 				}
 			} else {
-				message.channel.send('*' + message.member.displayName + ' ' + message.content.substring(4) + '*');
+				mySend(message.channel, '*' + message.member.displayName + ' ' + message.content.substring(4) + '*');
 			}
 		}
 
 		if(message.author.username === 'nullpo'){
-			if(message.content.match('\\.admin|\\.gm|\\.mj')){
-				message.channel.send('Oui, c\'est toi ! Le seul et l\'unique !');
+			if(message.content.match(/\.admin|\.gm|\.mj/)){
+				mySend(message.channel, 'Oui, c\'est toi ! Le seul et l\'unique !');
 			}
 		}
 
-		if(message.content.match('\\.help')){
-			message.author.send('Bonjour !');
-			message.author.send(':cateyes:');
-			message.author.send('Voici la liste des commandes que j\'autorise sur le channel '+message.channel.name +' :');
-			message.author.send('`.help` : Affiche cette aide.');
-			message.author.send('`.list scenarii` : Affiche la liste des Scénarii disponibles.');
-			message.author.send('`.roll` : Lance les Dés pour déterminer le Ton.');
-			message.author.send('`.give <user>` : Donne les Dés (ainsi que le Centre d\'Attention) à un Scénariste, lors d\'une partie de Face au Titan.');
+		if(message.content.match(/\.help/)){
+			mySend(message.author, 'Bonjour !');
+			mySend(message.author, ':cateyes:');
+			mySend(message.author, 'Voici la liste des commandes que j\'autorise sur le channel '+message.channel.name +' :');
+			mySend(message.author, '`.help` : Affiche cette aide.');
+			mySend(message.author, '`.list scenarii` : Affiche la liste des Scénarii disponibles.');
+			mySend(message.author, '`.roll` : Lance les Dés pour déterminer le Ton.');
+			mySend(message.author, '`.give <user>` : Donne les Dés (ainsi que le Centre d\'Attention) à un Scénariste, lors d\'une partie de Face au Titan.');
 		}
 		
-		if(message.content.match('\\.list scenar')){
+		if(message.content.match(/\.list sc.nar/)){
 
 		}
 
-		if(message.content.match('\\.roll')){
+		if(message.content.match(/\.roll/)){
 			const a = Math.floor(Math.random()*6)+1;
 			const b = Math.floor(Math.random()*6)+1;
 			const c = Math.floor(Math.random()*2);
 			if(c==0){
-				message.channel.send(':black_dice'+a + ': :white_dice' + b + ':');
+				mySend(message.channel, ':black_dice'+a + ': :white_dice' + b + ':');
 			} else {
-				message.channel.send(':white_dice'+a + ': :black_dice' + b + ':');
+				mySend(message.channel, ':white_dice'+a + ': :black_dice' + b + ':');
 			}
 		}
 	} else {
-		if(message.content.match(':.*dice\\d: :.*dice\\d:')){
-			const dice = message.content.split(': :');
-			if(dice[1][dice[1].length-2] === dice[0][dice[1].length-1]){
-				message.channel.send('Vous avez fait un double !');
+		if(message.content.match(/(.*white_dice.*|.*black_dice.*){2}/)){
+			const dice = message.content.split(/ /);
+			if(dice[1].match(/\D\d\D/)[0] === dice[0].match(/\D\d\D/)[0]){
+				mySend(message.channel, 'Vous avez fait un double !');
 			}
 		}
 	}
 });
+
+function mySend(dest, message) {
+	dest.send(parseEmotes(message));
+}
+
+function parseEmotes(str) {
+	let matched = [];
+	let outString = str;
+	let matcher = str.match(/:[_A-Za-z0-9]+:/g);
+	if(matcher){
+		matcher.map(x => {
+			emoji = client.emojis.cache.find(emoji => x.match(emoji.name));
+			if(emoji){
+				matched.push(
+					{ 
+						found: x,
+						replacement: emoji.toString()
+					}
+				);
+			}
+		});
+		matched.forEach(data => outString = outString.replace(data.found, data.replacement));
+	}
+	return outString;
+}
 
 // login to Discord with your app's token
 const tokenFile = fs.readFileSync("./myToken.json");
