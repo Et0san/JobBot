@@ -14,6 +14,7 @@
   "author": "Et0san",
   "license": "GPL-3.0-or-later",
   "dependencies": {
-    "discord.js": "^12.0.2"
+    "discord.js": "^12.0.2",
+    "node-fetch": "^2.6.0"
   }
 }
