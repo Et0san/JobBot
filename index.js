@@ -16,7 +16,7 @@ client.on('message', message => {
 		if(message.content.match(/\.me .+/)){
 			if(Math.floor(Math.random()*2)==0){
 				if(message.author.username === 'nullpo'){
-					mySend(message.channel, 'Oui, c\'est toi ! Le seul et l\'unique !');
+					mySend(message.channel, '*Oui, Le Maître, c\'est toi ! Le seul et l\'unique !*');
 				} else {
 					let mess = Math.floor(Math.random()*6);
 					switch(mess){
