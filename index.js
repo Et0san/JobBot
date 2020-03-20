@@ -55,13 +55,13 @@ client.on('message', message => {
 		}
 
 		if(message.content.match(/\.roll/)){
-			const a = Math.floor(Math.random()*6)+1;
-			const b = Math.floor(Math.random()*6)+1;
-			const c = Math.floor(Math.random()*2);
-			if(c==0){
-				mySend(message.channel, ':black_dice'+a + ': :white_dice' + b + ':');
+			const whiteDice = Math.floor(Math.random()*6)+1;
+			const blackDice = Math.floor(Math.random()*6)+1;
+			const order = Math.floor(Math.random()*2) == 0;
+			if(order){
+				mySend(message.channel, ':black_dice'+ whiteDice + ': :white_dice' + blackDice + ':');
 			} else {
-				mySend(message.channel, ':white_dice'+a + ': :black_dice' + b + ':');
+				mySend(message.channel, ':white_dice'+ blackDice + ': :black_dice' + whiteDice + ':');
 			}
 		}
 	} else {
