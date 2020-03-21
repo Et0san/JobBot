@@ -23,7 +23,9 @@ const scenarii = [
 		events: 'L’arrivée massive des colons Damois suite à une *catastrophe survenue au pays*, qu’aucun ne souhaite mentionner.\nUne tempête s’abattant sur les régions côtières et les noyant sous une *eau noire*.\nLe *grand craquement*, quand Krataho s’éveillera et crachera sa colère sur les terres avoisinantes\nLa *disparition de la colonie de Karnohe*, dont aucun habitant n\'a été retrouvé.\nLe troupeau des *tempêtes fantômes*, mené par la tempête infernale à la livrée d’ébène.\nLes *colonnes de feu* en provenance du désert écarlate, plongeant sur les landes proches.',
 		tones: 'Paisible, Coriace, Sauvage',
 		compagnons: '*Bernard Voeden*, descendant d’un des créateurs de l’Ordre.\n*Hilda Valuta*, braqueuse de banques et coupable de multiples meurtres.\n*Tikal*, change-peau convaincu du meurtre de sa propre famille.\n*Hetkya*, chasseuse de renom mise au ban de sa propre tribu.\n*Wakhan*, chaman exalté, extravagant et plus cultivé qu’il ne le laisse paraître.\n*Sœur Julia*, ayant intégré certaines coutumes Hohù à sa pratique religieuse.',
-		ordre: 'Formé après la première rencontre des colons avec Vamakaskan, l’Ordre du Titan est une entreprise philanthropique financée par de riches colons anonymes. Formé uniquement de membres des colonies Damoises à son origine, l’Ordre a rapidement recruté des locaux pour	bénéficier de leurs savoirs, sans forcément toujours leur divulguer leur véritable but. Aujourd’hui, l’Ordre recrute les meilleurs. Mais aussi les pires, en proposant de racheter la vie des condamnés à mort, Hohù comme Damois'
+		ordre: 'Formé après la première rencontre des colons avec Vamakaskan, l’Ordre du Titan est une entreprise philanthropique financée par de riches colons anonymes. Formé uniquement de membres des colonies Damoises à son origine, l’Ordre a rapidement recruté des locaux pour	bénéficier de leurs savoirs, sans forcément toujours leur divulguer leur véritable but. Aujourd’hui, l’Ordre recrute les meilleurs. Mais aussi les pires, en proposant de racheter la vie des condamnés à mort, Hohù comme Damois',
+		mysteres: 'Double 5 : Quel être de légende se réveillera quand Vamakaskan poussera trois brames le même jour ?\nDouble 6 : Quelle propriété extraordinaire les excréments de Vamakaskan procurent-ils à ceux qui s’en enduisent ?',
+		menaces: 'Double 5 : Les Tankas, ces géants qui font paître leurs troupeaux dans le sillage de Vamakaskan.\n Double 6 : Begraf Plaats, le riche alchimiste qui attend que Vamakaskan le conduise au cimetière où reposent les ancêtres du Titan, dans l’espoir d’exploiter leurs ossements'
 	}
 ]
 
@@ -92,21 +94,44 @@ client.on('message', message => {
 			if(message.content.match(/\.admin|\.gm|\.mj/)){
 				mySend(message.channel, 'Oui, c\'est toi ! Le seul et l\'unique !');
 			}
+
+			if(message.content.match(/\.save ?game? \d+/)){
+				const game = currentGames[parseInt(message.content.match(/\d+/))];
+				if(game){
+					mySend(message.channel, game);
+				}
+			}
 		}
 
 		if(message.content.match(/\.start ?game/)){
 			if(!gameStarting){
 				gameStarting = true;
 				// TODO
+				gameStarting = false;
 			} else {
 				mySend(message.channel, 'Une autre partie est déjà en cours de création ; veuillez patienter.');
 			}
 		}
 
+		if(message.content.match(/\.stop game \d+/)){
+			const index = parseInt(message.content.match(/\d+/)[0]);
+			const game = currentGames[index-1];
+			if(game){
+				// TODO stopper la partie. Cela signifie retirer les rôles des gens et changer le bool "ended" de la game.
+			}
+		}
+
 		if(message.content.match(/\.list ?games?/)){
-			currentGames.forEach(game => {
-				mySend(message.channel, '**Partie '+currentGames.indexOf(game)+1+'** :');
-			});
+			if(!currentGames || currentGames.length == 0){
+				mySend(message.channel, 'Aucune partie n\'est enregistrée dans AdHBot !');
+			} else {
+				currentGames.forEach(game => {
+					mySend(message.channel, '**Partie '+currentGames.indexOf(game)+1+'** :');
+					mySend(message.channel, '**Titan** :' + scenarii[game.scenario].titan);
+					const players = game.players.map(player => player.name+' ,');
+					mySend(message.channel, '**Scénaristes** :' + players.substring(0, players.length-3));
+				});// TODO print state (fini, pause, en cours)
+			}
 		}
 
 		if(message.content.match(/\.unpause ?game ? \d+/)){
@@ -141,22 +166,14 @@ client.on('message', message => {
 			}
 		}
 
-		if(message.content.match(/\.save ?game? \d+/)){
-			const game = currentGames[parseInt(message.content.match(/\d+/))];
-			if(game){
-				mySend(message.channel, game);
-			}
-		}
-
 		if(message.content.match(/\.help/)){
 			mySend(message.author, 'Bonjour !');
 			mySend(message.author, ':cateyes:');
-			mySend(message.author, 'Voici la liste des commandes que j\'autorise sur le channel '+message.channel.name +' :');
-			mySend(message.author, '`.help` : Affiche cette aide.');
-			mySend(message.author, '`.scenarii list` : Affiche la liste des Scénarii disponibles.');
-			mySend(message.author, '`.scenario <numero scenario>` : Affiche le détail du Scénario paramètre.');
-			mySend(message.author, '`.roll` : Lance les Dés pour déterminer le Ton.');
-			mySend(message.author, '`.give <user>` : Donne les Dés (ainsi que le Centre d\'Attention) à un Scénariste, lors d\'une partie de Face au Titan.');
+			mySend(message.author, 'Voici la liste des commandes que j\'autorise sur le channel '+message.channel.name +' :\n`.help` : Affiche cette aide.\n`.me` : Parle de soi-même à la troisième personne.');
+
+			if(message.content.match(/.* .*titan.*/)){
+				mySend(message.author, '`.scenarii list` : Affiche la liste des Scénarii disponibles.\n`.scenario <numero scenario>` : Affiche le détail du Scénario à l\'index en paramètre.\n`.roll` : Lance les Dés pour déterminer le Ton. Commande réservée au Centre d\'Attention.\n`.give <user>` : Donne les Dés (ainsi que le Centre d\'Attention) au Scénariste paramètre. Commande réservée au Centre d\'Attention.\n`.list games` : Affiche la liste des parties connues ainsi que leur état.\n`.game <numero>` : Affiche le détail de la partie à l\'index en paramètre.\n`.save game <numero>` : Retourne l\'objet JSON contenant la totalité de l\'état de la partie à l\'index en paramètre. Commande Admin.\n`.pause game <numero>` : Met en pause la partie à l\'index en paramètre. Commande MJ.\n`.unpause game <numero>` : Reprend la partie à l\'index en paramètre. Commande MJ.');
+			}
 		}
 
 		if(message.content.match(/\.scenario \d+/)){
@@ -175,6 +192,8 @@ client.on('message', message => {
 				mySend(message.channel, '**Factions** : ' + scenar.factions);
 				mySend(message.channel, '**Événements** : ' + scenar.events);
 				mySend(message.channel, '**Compagnons** : ' + scenar.compagnons);
+				mySend(message.channel, '**Mystères** : ' + scenar.mysteres);
+				mySend(message.channel, '**Menaces** : ' + scenar.menaces);
 			}
 		} else if(message.content.match(/\.((scenari(i|os?))|(scenari(i|os?) ?list)|(list ?scenari(i|os?)))/)){
 			mySend(message.channel, '**Liste des Scénarii** :');
