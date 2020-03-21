@@ -1,6 +1,12 @@
-// require the discord.js module
+/**
+ * Discord.js module
+ */
 const Discord = require('discord.js');
-var fs = require("fs");
+
+/**
+ * Gestionnaire de fichiers
+ */
+const fs = require("fs");
 
 // create a new Discord client
 const client = new Discord.Client();
@@ -11,7 +17,14 @@ client.once('ready', () => {
 	console.log('Ready!');
 });
 
-// Liste des Scénarii
+/**
+ * liste des carac alphanumériques, pour générer des ID facilement
+ */
+const aplhanum = 'azertyuiopmlkjhgfdsqwxcvbnAZERTYUIOPMLKJHGFDSQWXCVBN0123456789';
+
+/** 
+ * Liste des Scénarii
+ */
 const scenarii = [
 	{
 		titan: 'Vamakaskan',
@@ -37,16 +50,22 @@ const scenarii = [
 const phases = ['des Compagnons,', 'du Titan', 'du Monde', 'des Préparatifs', 'de l\'Affrontement'];
 
 /**
+ * Liste des Permissions discord
+ */
+const perms = Discord.Permissions.FLAGS;
+
+/**
  * Contient les parties en cours, objets json contenant :
  * 
  * name: nom de la partie,
  * players: [
  *     {
- *         name: nom de scénariste, le username discord (pour éviter les petits malins qui changeraient de pseudo pour récupérer la parole)
- *         perso: nom du personnage incarné
+ *         name: nom de Scénariste, le username discord (pour éviter les petits malins qui changeraient de pseudo pour récupérer la parole),
+ *         perso: nom du personnage incarné,
  *         center: boolean indiquant s'il est centre d'attention ou non,
  *         dead: boolean indiquant si le perso est mort ou non,
- *         discoursDone: boolean indiquant si le perso a déjà fait son Discours lors de cette Phase ou non
+ *         discoursDone: boolean indiquant si le perso a déjà fait son Discours lors de cette Phase ou non,
+ *         animateur: boolean indiquant si le Scénariste est Animateur
  *     },...
  * ],
  * scenario: numéro du scénario courant,
@@ -63,9 +82,14 @@ const phases = ['des Compagnons,', 'du Titan', 'du Monde', 'des Préparatifs', '
  * ended: boolean indiquant si la partie est terminée,
  * paused: boolean indiquant si la partie est en pause
  */
-const currentGames = [
+let currentGames = [
 
-]
+];
+
+// Permet de gérer la partie en cours de création (.setup game)
+let gameInCreation = {};
+
+let gameStarting = false;
 
 client.on('message', message => {
 	if(!message.author.bot){
@@ -103,68 +127,205 @@ client.on('message', message => {
 			}
 		}
 
-		if(message.content.match(/\.start ?game/)){
-			if(!gameStarting){
-				gameStarting = true;
-				// TODO
-				gameStarting = false;
-			} else {
-				mySend(message.channel, 'Une autre partie est déjà en cours de création ; veuillez patienter.');
-			}
-		}
+		// if(message.content.match(/\.start ?game/)){
+		// 	// TODO vérifier que la personne est MJ
+		// 	if(!gameStarting){
+				
+		// 		// Création de partie
+		// 		gameStarting = true;
+		// 		mySend(message.channel, 'Création de partie commencée. Vous pouvez à tout moment faire `.setupcancel` pour arrêter cette séquence.\nLes autres commandes de AdHBot peuvent être indisponibles pendant la création.');
 
-		if(message.content.match(/\.stop game \d+/)){
-			const index = parseInt(message.content.match(/\d+/)[0]);
-			const game = currentGames[index-1];
-			if(game){
-				// TODO stopper la partie. Cela signifie retirer les rôles des gens et changer le bool "ended" de la game.
-			}
-		}
+		// 		// Passage au choix du nom de la partie
+		// 		mySend(message.channel, 'Saisissez le nom de la partie : `.setupname <nom>`, `.setupname` pour calculer un ID par défaut.');
 
-		if(message.content.match(/\.list ?games?/)){
-			if(!currentGames || currentGames.length == 0){
-				mySend(message.channel, 'Aucune partie n\'est enregistrée dans AdHBot !');
-			} else {
-				currentGames.forEach(game => {
-					mySend(message.channel, '**Partie '+currentGames.indexOf(game)+1+'** :');
-					mySend(message.channel, '**Titan** :' + scenarii[game.scenario].titan);
-					const players = game.players.map(player => player.name+' ,');
-					mySend(message.channel, '**Scénaristes** :' + players.substring(0, players.length-3));
-				});// TODO print state (fini, pause, en cours)
-			}
-		}
+		// 	} else {
+		// 		mySend(message.channel, 'Une autre partie est déjà en cours de création ; veuillez patienter.');
+		// 	}
+		// }
 
-		if(message.content.match(/\.unpause ?game ? \d+/)){
-			const index = parseInt(message.content.match(/\d+/)[0]);
-			const game = currentGames[index-1];
-			if(game){
-				// TODO relancer la partie. Cela signifie redonner les rôles aux gens et changer le bool "paused" de la game.
-			}
-		}
+		// if(message.content.match(/\.setup/)){
+		// 	// TODO vérifier que la personne est MJ
+		// 	if(gameStarting){
+		// 		if(message.content.match(/\.setupcancel/)){
+		// 			// Annulation de la création
+		// 			gameStarting = false;
+		// 			mySend(message.channel, 'Annulation de la création de la partie.');
+		// 		} else if(message.content.match(/\.setupname/)) {
+		// 			// Setup du nom
+		// 			const matcher = message.content.match(/\.setupname .+/);
+		// 			gameInCreation.name = '';
+		// 			if(matcher) {
+		// 				gameInCreation.name = matcher[0].substring(11);
+		// 			} else {
+		// 				for(let i=0;i<8;++i){
+		// 					gameInCreation.name+=aplhanum[Math.floor(Math.random()*aplhanum.length)];
+		// 				}
+		// 				mySend(message.channel, 'Aucun nom sélectionné. Choix d\'un nom par défaut : ' + gameInCreation.name);
+		// 			}
+					
+		// 			// Création du rôle pour les joueurs de la partie
+		// 			message.guild.roles.create({
+		// 				data: {
+		// 					name: gameInCreation.name,
+		// 					mentionable: true 
+		// 				},
+		// 				reason: 'Lancement d\'une partie de Face au Titan.'
+		// 			});
 
-		if(message.content.match(/\.game \d+/)){
-			const index = parseInt(message.content.match(/\d+/)[0]);
-			const game = currentGames[index-1];
-			if(game){
-				mySend(message.channel, '**Détail de la partie '+index+'** :');
-				mySend(message.channel, '**Titan** :' + scenarii[game.scenario].titan);
-				const players = game.players.map(player => player.name+' ,');
-				mySend(message.channel, '**Scénaristes** :' + players.substring(0, players.length-3));
-				mySend(message.channel, '**Phase courante** : Phase ' + phases[game.phase]);
-				mySend(message.channel, '**Scénariste en Discours** :' + game.players.find(player => player.center).name);
-				const motifs = '';
-				game.motifs.forEach(motif => {
-					motifs += '*Motif '+game.motifs.indexOf(motif)+'* :\n';
-					motifs += 'Description : '+motif.desc+'\n';
-					motifs += 'Échos : ';
-					motif.echoes.forEach(echo => {
-						motifs += 'Motif '+echo+', ';
-					});
-					motifs = motifs.substring(0,motifs.length-3)+'\n';
-				});
-				mySend(message.channel, '**Motifs** :\n' + motifs);
-			}
-		}
+		// 			// création du channel
+		// 			message.guild.channels.create(gameInCreation.name,{
+		// 				type: 'text',
+		// 				topic: 'Partie de Face au Titan (id = '+gameInCreation.name+') en cours. Pas de hors-sujet !',
+		// 				nsfw: false,
+		// 				parent: message.guild.channels.cache.find(channel => channel.type === 'category' && channel.name === 'face au titan'),
+		// 				permissionOverwrites: [{
+		// 					id: message.guild.id,
+		// 					allow: [perms.ADD_REACTIONS, perms.ATTACH_FILES, perms.READ_MESSAGE_HISTORY, perms.MENTION_EVERYONE, perms.USE_EXTERNAL_EMOJIS, perms.CONNECT, perms.EMBED_LINKS, perms.SEND_MESSAGES, perms.VIEW_CHANNEL],
+		// 					deny: [perms.ADMINISTRATOR, perms.CHANGE_NICKNAME, perms.CREATE_INSTANT_INVITE, perms.KICK_MEMBERS, perms.BAN_MEMBERS, perms.MANAGE_CHANNELS, perms.MANAGE_GUILD, perms.MANAGE_EMOJIS, perms.MANAGE_WEBHOOKS, perms.MANAGE_ROLES, perms.MANAGE_NICKNAMES, perms.MUTE_MEMBERS, perms.DEAFEN_MEMBERS, perms.MOVE_MEMBERS, perms.STREAM, perms.PRIORITY_SPEAKER, perms.VIEW_AUDIT_LOG],
+		// 					type: 'role'
+		// 				},
+		// 				{
+		// 					id: message.guild.roles.cache.find(role => role.name === '@everyone'),
+		// 					allow: [],
+		// 					deny: [perms.ADMINISTRATOR, perms.CHANGE_NICKNAME, perms.CREATE_INSTANT_INVITE, perms.KICK_MEMBERS, perms.BAN_MEMBERS, perms.MANAGE_CHANNELS, perms.MANAGE_GUILD, perms.MANAGE_EMOJIS, perms.MANAGE_WEBHOOKS, perms.MANAGE_ROLES, perms.MANAGE_NICKNAMES, perms.MUTE_MEMBERS, perms.DEAFEN_MEMBERS, perms.MOVE_MEMBERS, perms.STREAM, perms.PRIORITY_SPEAKER, perms.VIEW_AUDIT_LOG, perms.ADD_REACTIONS, perms.ATTACH_FILES, perms.READ_MESSAGE_HISTORY, perms.MENTION_EVERYONE, perms.USE_EXTERNAL_EMOJIS, perms.CONNECT, perms.EMBED_LINKS, perms.SEND_MESSAGES, perms.VIEW_CHANNEL],
+		// 					type: 'role'
+		// 				}
+		// 				],
+		// 				position: '0',
+		// 				reason: 'Lancement d\'une partie de Face au Titan.'
+		// 			});
+
+		// 			// Passage à la création des persos
+		// 			gameInCreation.players = [];
+		// 			mySend(message.channel, 'Entrez le nom des Scénaristes : `.setupplayers <pseudo>`, `.setupplayersstop` une fois qu\'ils sont tous inscrits.');
+
+		// 		} else if(message.content.match(/\.setupplayers/)){
+		// 			// Création des persos
+		// 			const matcher = message.content.match(/\.setupplayers .+/);
+		// 			if(message.content.match(/\.setupplayersstop/)){
+		// 				// Passage à la sélection de l'Animateur
+		// 				mySend(message.channel, 'Sélectionnez l\'Animateur : `.setupanim <pseudo>`, `.setupnoanim` pour ne pas mettre d\'Animateur');
+		// 			} else if(matcher){
+		// 				const playerName = matcher[0].substring(14);
+
+		// 				// TODO debug ce bout de code
+		// 				message.guild.members.cache.find(member => member.displayName === playerName).roles.add('face au titan', 'Lancement d\'une partie de Face au Titan');
+		// 				message.guild.members.cache.find(member => member.displayName === playerName).roles.add(gameInCreation.name, 'Lancement d\'une partie de Face au Titan');
+
+		// 				gameInCreation.players.push({
+		// 					name: playerName,
+		// 					perso: undefined,
+		// 					center: false,
+		// 					dead: false,
+		// 					discoursDone: false,
+		// 					animateur: false
+		// 				});
+		// 				mySend(message.channel, 'Entrez le nom du Scénariste suivant.');
+		// 			}
+		// 		} else if(message.content.match(/\.setup(no)?anim/)) {
+		// 			// Sélection de l'Animateur
+		// 			const matcher = message.content.match(/\.setupanim .+/);
+		// 			if(matcher) {
+		// 				const animateurName = matcher[0].substring(11);
+
+		// 				// ??? attribuer le rôle Animateur au playerName ??? peut-être
+
+		// 				gameInCreation.players.find(player => player.name === animateurName).animateur = true;
+						
+		// 				// Passage au choix du Scénario
+		// 				mySend(message.channel, 'Entrez le numéro du Scénario de la partie : `.setupscenar <numero>`');
+		// 			} else {
+
+		// 				// Passage au choix du Scénario
+		// 				mySend(message.channel, 'Aucun Animateur sélectionné. Passage à la suite.\nEntrez le numéro du Scénario de la partie : `.setupscenar <numero>`');
+		// 			}
+		// 		} else if(message.content.match(/\.setupscenar \d+/)){
+		// 			// Choix du Scénario
+		// 			const matcher = message.content.match(/\d+/);
+		// 			const index = parseInt(matcher[0])-1;
+		// 			const scenar = scenarii[index];
+		// 			if(scenar){
+		// 				mySend(message.channel, '**Scénario sélectionné** :');
+		// 				mySend(message.channel, '**Nom du Titan** : ' + scenar.titan);
+		// 				mySend(message.channel, '**Tons** : ' + scenar.tones);
+		// 				mySend(message.channel, '**Autres noms** : ' + scenar.names);
+		// 				mySend(message.channel, '**Légende** : ' + scenar.legende);
+
+		// 				gameInCreation.scenario = index;
+
+		// 				// Ajout de la partie à la liste des parties
+		// 				currentGames.push(gameInCreation);
+						
+		// 				// Debug
+		// 				console.log(gameInCreation);
+
+		// 				// La partie n'est plus en création
+		// 				gameInCreation = {};
+		// 				gameStarting = false;
+						
+		// 				// C'est bon !
+		// 				mySend(message.channel, 'La partie peut commencer !');
+		// 			} else {
+		// 				mySend(message.channel, 'Ce Scénario n\'existe pas.\nEntrez le numéro du Scénario de la partie : `.setupscenar <numero>`');
+		// 			}
+		// 		}
+		// 	} else {
+		// 		mySend(message.channel, 'Aucune création en cours. Utilisez `.start game` pour setup une partie.');
+		// 	}			
+		// }
+
+		// if(message.content.match(/\.stop game \d+/)){
+		// 	const index = parseInt(message.content.match(/\d+/)[0]);
+		// 	const game = currentGames[index-1];
+		// 	if(game){
+		// 		// TODO stopper la partie. Cela signifie retirer les rôles des gens et changer le bool "ended" de la game.
+		// 	}
+		// }
+
+		// if(message.content.match(/\.list ?games?/)){
+		// 	if(!currentGames || currentGames.length == 0){
+		// 		mySend(message.channel, 'Aucune partie n\'est enregistrée dans AdHBot !');
+		// 	} else {
+		// 		currentGames.forEach(game => {
+		// 			mySend(message.channel, '**Partie '+currentGames.indexOf(game)+1+'** :');
+		// 			mySend(message.channel, '**Titan** :' + scenarii[game.scenario].titan);
+		// 			const players = game.players.map(player => player.name+' ,');
+		// 			mySend(message.channel, '**Scénaristes** :' + players.substring(0, players.length-3));
+		// 		});// TODO print state (fini, pause, en cours)
+		// 	}
+		// }
+
+		// if(message.content.match(/\.unpause ?game ? \d+/)){
+		// 	const index = parseInt(message.content.match(/\d+/)[0]);
+		// 	const game = currentGames[index-1];
+		// 	if(game){
+		// 		// TODO relancer la partie. Cela signifie redonner les rôles aux gens et changer le bool "paused" de la game.
+		// 	}
+		// }
+
+		// if(message.content.match(/\.game \d+/)){
+		// 	const index = parseInt(message.content.match(/\d+/)[0]);
+		// 	const game = currentGames[index-1];
+		// 	if(game){
+		// 		mySend(message.channel, '**Détail de la partie '+index+'** :');
+		// 		mySend(message.channel, '**Titan** :' + scenarii[game.scenario].titan);
+		// 		const players = game.players.map(player => player.name+' ,');
+		// 		mySend(message.channel, '**Scénaristes** :' + players.substring(0, players.length-3));
+		// 		mySend(message.channel, '**Phase courante** : Phase ' + phases[game.phase]);
+		// 		mySend(message.channel, '**Scénariste en Discours** :' + game.players.find(player => player.center).name);
+		// 		const motifs = '';
+		// 		game.motifs.forEach(motif => {
+		// 			motifs += '*Motif '+game.motifs.indexOf(motif)+'* :\n';
+		// 			motifs += 'Description : '+motif.desc+'\n';
+		// 			motifs += 'Échos : ';
+		// 			motif.echoes.forEach(echo => {
+		// 				motifs += 'Motif '+echo+', ';
+		// 			});
+		// 			motifs = motifs.substring(0,motifs.length-3)+'\n';
+		// 		});
+		// 		mySend(message.channel, '**Motifs** :\n' + motifs);
+		// 	}
+		// }
 
 		if(message.content.match(/\.help/)){
 			mySend(message.author, 'Bonjour !');
@@ -172,7 +333,7 @@ client.on('message', message => {
 			mySend(message.author, 'Voici la liste des commandes que j\'autorise sur le channel '+message.channel.name +' :\n`.help` : Affiche cette aide.\n`.me` : Parle de soi-même à la troisième personne.');
 
 			if(message.content.match(/.* .*titan.*/)){
-				mySend(message.author, '`.scenarii list` : Affiche la liste des Scénarii disponibles.\n`.scenario <numero scenario>` : Affiche le détail du Scénario à l\'index en paramètre.\n`.roll` : Lance les Dés pour déterminer le Ton. Commande réservée au Centre d\'Attention.\n`.give <user>` : Donne les Dés (ainsi que le Centre d\'Attention) au Scénariste paramètre. Commande réservée au Centre d\'Attention.\n`.list games` : Affiche la liste des parties connues ainsi que leur état.\n`.game <numero>` : Affiche le détail de la partie à l\'index en paramètre.\n`.save game <numero>` : Retourne l\'objet JSON contenant la totalité de l\'état de la partie à l\'index en paramètre. Commande Admin.\n`.pause game <numero>` : Met en pause la partie à l\'index en paramètre. Commande MJ.\n`.unpause game <numero>` : Reprend la partie à l\'index en paramètre. Commande MJ.');
+				mySend(message.author, '`.scenarii list` : Affiche la liste des Scénarii disponibles.\n`.scenario <numero scenario>` : Affiche le détail du Scénario à l\'index en paramètre.\n`.roll` : Lance les Dés pour déterminer le Ton. Commande réservée au Centre d\'Attention.\n`.give <user>` : Donne les Dés (ainsi que le Centre d\'Attention) au Scénariste paramètre. Commande réservée au Centre d\'Attention.\n`.list games` : Affiche la liste des parties connues ainsi que leur état.\n`.game <numero>` : Affiche le détail de la partie à l\'index en paramètre.\n`.save game <numero>` : Retourne l\'objet JSON contenant la totalité de l\'état de la partie à l\'index en paramètre. Commande Admin.\n`.pause game <numero>` : Met en pause la partie à l\'index en paramètre. Commande MJ.\n`.unpause game <numero>` : Reprend la partie à l\'index en paramètre. Commande MJ.\n`.start game` : Lance la création d\'une partie. Toutes les commandes seront expliquées au fur et à mesure.');
 			}
 		}
 
