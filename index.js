@@ -31,7 +31,7 @@ const joblist = [
 
 const users = [
 	{ name: 'Test Cheh',
-		jobs: [{name: Paysan, level: 100}]}
+		jobs: [{name: 'Paysan', level: 100}]}
 ]
 
 client.on('message', message => {
