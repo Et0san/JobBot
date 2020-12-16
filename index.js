@@ -24,13 +24,13 @@ client.once('ready', () => {
 const perms = Discord.Permissions.FLAGS;
 
 const joblist = [
-	a,
-	b,
-	v
+	'Paysan',
+	'b',
+	'v'
 ]
 
 const users = [
-	{ name: 'nullpo',
+	{ name: 'Test Cheh',
 		jobs: [{name: Paysan, level: 100}]}
 ]
 
@@ -43,43 +43,43 @@ client.on('message', message => {
 
 		if(message.content.match(/!job add \w+ \d+/)){
 			let matcher = str.match(/!job add (\w+) (\d+)/g);
-			const job = matcher.groups(0);//TODO fix me
-			const level = matcher.groups(1);//TODO fix me
+			const job = matcher[1];
+			const level = matcher[2];
 
 			//TODO ajouter un cas d'erreur si le job n'existe pas
 
-			if(users.filter(_.name==message.author && _.jobs.filter(_.name==job)).length!=0){
+			if(users.filter(_.name==message.author.username && _.jobs.filter(_.name==job)).length!=0){
 				if(users.filter(_.jobs.filter(_.level==level)).length!=0){
 					mySend(message.channel, 'You already have this job with the same level!');
 				} else {
-					users[users.findIndex(_.name==message.author)].jobs[jobs.findIndex(_.name==job)].level=level;
+					users[users.findIndex(_.name==message.author.username)].jobs[jobs.findIndex(_.name==job)].level=level;
 				}
 			} else {
-				if(users.filter(_.name==message.author).length!=0){
+				if(users.filter(_.name==message.author.username).length!=0){
 					users.push({
-						name: message.author,
+						name: message.author.username,
 						jobs: []
 					})
 				}
-				users[users.findIndex(_.name==message.author)].jobs.push({name: job, level: level});
+				users[users.findIndex(_.name==message.author.username)].jobs.push({name: job, level: level});
 			}
 
-			mySend(message.channel, 'Job '+job+' added to '+message.author+' with level '+level);
+			mySend(message.channel, 'Job '+job+' added to '+message.author.username+' with level '+level);
 		}
 
 		if(message.content.match(/!jobs .+/)){
 			let matcher = str.match(/!jobs (.+)/g);
-			const pseudo = matcher.groups(0);//TODO fix me
+			const pseudo = matcher[1];
 
 			//TODO ajouter un cas d'erreur si le pseudo n'existe pas
 
 			mySend(message.channel, 'List of '+pseudo+'\'s jobs:');
-			mySend(message.channel, users.filter(_.name==pseudo)[0].jobs);//TODO ptêt un matching à faire entre le pseudo sur le server et le pseudo discord
+			mySend(message.channel, users.filter(_.name==pseudo)[0].jobs);
 		}
 
 		if(message.content.match(/!jobs whois .+/)){
 			let matcher = str.match(/!jobs whois (.+)/g);
-			const job = matcher.groups(0);//TODO fix me
+			const job = matcher[1];
 
 			//TODO ajouter un cas d'erreur si le job n'existe pas
 
