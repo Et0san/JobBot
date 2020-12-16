@@ -1,7 +1,7 @@
 {
-  "name": "jobbot",
-  "version": "0.0.1-Alpha0",
-  "description": "Listing and registering jobs for Dofus 1.29",
+  "name": "jdrbot",
+  "version": "1.0.0",
+  "description": "A bot for playing RPG over muh discord server.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,10 +9,9 @@
   "keywords": [
     "discord",
     "bot",
-    "dofus"
+    "rpg"
   ],
-  "author": "Etosan",
-  "contributors": [],
+  "author": "Et0san",
   "license": "GPL-3.0-or-later",
   "dependencies": {
     "discord.js": "^12.0.2",

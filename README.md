@@ -1,1 +1,3 @@
-# A discord bot for listing and registering jobs for Dofus 1.29.
+# A discord bot for playing RPG over Et0's "Antre des Héros" discord server.
+
+Specialized for "Facing the Titan".
