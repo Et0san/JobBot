@@ -1,6 +1,7 @@
 /**
  * Discord.js module
  */
+const { match } = require('assert');
 const Discord = require('discord.js');
 
 /**
@@ -25,66 +26,84 @@ const perms = Discord.Permissions.FLAGS;
 
 const joblist = [
 	'Paysan',
-	'b',
-	'v'
+	'Boulanger',
+	'Bijoutier'
 ]
 
 const users = [
-	{ name: 'Test Cheh',
-		jobs: [{name: 'Paysan', level: 100}]}
+	{ 
+		name: 'Test Cheh',
+		jobs: [{name: 'Paysan', level: 100}]
+	}
 ]
 
 client.on('message', message => {
 	if(!message.author.bot){
-		if(message.content.match(/!job list/)){
-				mySend(message.channel, 'List of existing jobs:');
-				mySend(message.channel, joblist.map(_+'\n'));
-		}
+		if(message.content.match(/!jobs list/)){
+			mySend(message.channel, 'List of existing jobs:');
+			mySend(message.channel, joblist.reduce((k, l)=>k+'\n'+l));
 
-		if(message.content.match(/!job add \w+ \d+/)){
-			let matcher = str.match(/!job add (\w+) (\d+)/g);
+		} else if(message.content.match(/!job add \w+ \d+/)){
+			let matcher = message.content.match(/!job add (\w+) (\d+)/);
 			const job = matcher[1];
 			const level = matcher[2];
 
-			//TODO ajouter un cas d'erreur si le job n'existe pas
+			if(joblist.filter(a=>a==job).length==0){
+				mySend(message.channel, job+' is not a job');
 
-			if(users.filter(_.name==message.author.username && _.jobs.filter(_.name==job)).length!=0){
-				if(users.filter(_.jobs.filter(_.level==level)).length!=0){
-					mySend(message.channel, 'You already have this job with the same level!');
-				} else {
-					users[users.findIndex(_.name==message.author.username)].jobs[jobs.findIndex(_.name==job)].level=level;
-				}
 			} else {
-				if(users.filter(_.name==message.author.username).length!=0){
-					users.push({
-						name: message.author.username,
-						jobs: []
-					})
+
+				if(users.filter(a=>a.name==getDisplayName(message) && a.jobs.filter(b=>b.name==job).length>0).length>0){
+					if(users.filter(a=>a.jobs.filter(b=>b.level==level)).length!=0){
+						mySend(message.channel, 'You already have this job with the same level!');
+					} else {
+						users[users.findIndex(a=>a.name==getDisplayName(message))].jobs[jobs.findIndex(b=>b.name==job)].level=level;
+					}
+				} else {
+					if(users.filter(a=>a.name==getDisplayName(message)).length==0){
+						
+						users.push({
+							name: getDisplayName(message),
+							jobs: []
+						})
+					}
+					users[users.findIndex(a=>a.name==getDisplayName(message))].jobs.push({name: job, level: level});
+					mySend(message.channel, 'Job '+job+' added to '+getDisplayName(message)+' with level '+level);
 				}
-				users[users.findIndex(_.name==message.author.username)].jobs.push({name: job, level: level});
 			}
 
-			mySend(message.channel, 'Job '+job+' added to '+message.author.username+' with level '+level);
-		}
-
-		if(message.content.match(/!jobs .+/)){
-			let matcher = str.match(/!jobs (.+)/g);
-			const pseudo = matcher[1];
-
-			//TODO ajouter un cas d'erreur si le pseudo n'existe pas
-
-			mySend(message.channel, 'List of '+pseudo+'\'s jobs:');
-			mySend(message.channel, users.filter(_.name==pseudo)[0].jobs);
-		}
-
-		if(message.content.match(/!jobs whois .+/)){
-			let matcher = str.match(/!jobs whois (.+)/g);
+		} else if(message.content.match(/!jobs whois .+/)){
+			let matcher = message.content.match(/!jobs whois (.+)/);
 			const job = matcher[1];
 
-			//TODO ajouter un cas d'erreur si le job n'existe pas
+			if(joblist.filter(a=>a==job).length==0){
+				mySend(message.channel, job+' is not a job');
 
-			mySend(message.channel, 'Who is '+job+ ' :');
-			mySend(message.channel, users.filter(_.jobs.filter(_.name=job)).map(_+'\n'));
+			} else {
+				mySend(message.channel, 'Who is '+job+ ':');
+
+				let users_jobs=[];
+				users.forEach(user=>{
+					const filterjob = user.jobs.filter(a=>a.name==job);
+					if(filterjob.length>0){
+						users_jobs.push(user.name+' level '+filterjob[0].level);
+					}
+				})
+
+				mySend(message.channel, users_jobs.reduce((k, l)=>k+', '+l));
+			}
+
+		} else if(message.content.match(/!jobs .+/)){
+			let matcher = message.content.match(/!jobs (.+)/);
+			const pseudo = matcher[1];
+
+			if(users.filter(a=>a.name==pseudo).length==0){
+				mySend(message.channel, pseudo+' has no jobs');
+			} else {
+				mySend(message.channel, 'List of '+pseudo+'\'s jobs:');
+				mySend(message.channel, fancyJobs(users.filter(a=>a.name==pseudo)[0].jobs));
+			}
+
 		}
 
 		if(message.content.match(/!help/)){
@@ -92,6 +111,20 @@ client.on('message', message => {
 		}
 	}
 });
+
+function getDisplayName(message){
+	return message.guild.member(message.author).displayName;
+}
+
+function fancyJobs(jobs){
+	let fancyJobs='';
+
+	jobs.forEach(job=>{
+		fancyJobs+=job.name+' level '+job.level+'\n'
+	});
+
+	return fancyJobs;
+}
 
 function mySend(dest, message) {
 	dest.send(parseEmotes(message));
