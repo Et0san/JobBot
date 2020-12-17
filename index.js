@@ -56,10 +56,10 @@ const joblist = [
 ]
 
 let users = [];
-const re = /!job add ([A-Za-zÀ-ÖØ-öø-ÿ]+( [A-Za-zÀ-ÖØ-öø-ÿ]+)*) (?<level>\d+)/;
+const re = /!metiers ajout ([A-Za-zÀ-ÖØ-öø-ÿ]+( [A-Za-zÀ-ÖØ-öø-ÿ]+)*) (?<level>\d+)/;
 client.on('message', message => {
 	if(!message.author.bot){
-		if(message.content.match(/!jobs list/)){
+		if(message.content.match(/!metiers liste/)){
 			mySend(message.channel, 'Liste des métiers disponibles:');
 			mySend(message.channel, joblist.reduce((k, l)=>k+'\n'+l));
 
@@ -103,8 +103,8 @@ client.on('message', message => {
 				}
 			}
 			console.log(users);
-		} else if(message.content.match(/!jobs whois ([A-Za-zÀ-ÖØ-öø-ÿ]+( [A-Za-zÀ-ÖØ-öø-ÿ]+)*)/)){
-			let matcher = message.content.match(/!jobs whois ([A-Za-zÀ-ÖØ-öø-ÿ]+( [A-Za-zÀ-ÖØ-öø-ÿ]+)*)/);
+		} else if(message.content.match(/!artisans ([A-Za-zÀ-ÖØ-öø-ÿ]+( [A-Za-zÀ-ÖØ-öø-ÿ]+)*)/)){
+			let matcher = message.content.match(/!artisans ([A-Za-zÀ-ÖØ-öø-ÿ]+( [A-Za-zÀ-ÖØ-öø-ÿ]+)*)/);
 			const job = matcher[1];
 
 			if(joblist.filter(a=>a==job).length==0){
@@ -127,24 +127,25 @@ client.on('message', message => {
 				}
 			}
 
-		} else if(message.content.match(/!jobs .+/)){
-			let matcher = message.content.match(/!jobs (.+)/);
+		} else if(message.content.match(/!metiers .+/)){
+			let matcher = message.content.match(/!metiers (.+)/);
 			const pseudo = matcher[1];
 
 			if(users.filter(a=>a.name==pseudo).length==0){
 				mySend(message.channel, pseudo+' n\'a pas de métier');
 			} else {
 				mySend(message.channel, 'Liste des métiers de '+pseudo+':');
-				mySend(message.channel, fancyJobs(users.filter(a=>a.name==pseudo)[0].jobs));
+				mySend(message.channel, fancyjobs(users.filter(a=>a.name==pseudo)[0].jobs));
 			}
 
 		}
 
-		if(message.content.match(/!help/)){
-			mySend(message.channel, '\`\`!help\`\` renvoie la liste de commandes de ce bot'+'\n'
-				+'\`\`!jobs list\`\` renvoie la liste des différents métiers disponibles'+'\n'
-				+'\`\`!job add <job> <nombre>\`\` Ajoute à l\'auteur du message le métier et le niveau de ce dernier s\'il n\'a pas déjà le métier au niveau indiqué'+'\n'
-				+'\`\`!jobs <pseudo>\`\` retourne la liste des métiers du joueur avec le pseudo <pseudo>');
+		if(message.content.match(/!aide/)){
+			mySend(message.channel, '\`\`!aide\`\` renvoie la liste de commandes de ce bot'+'\n'
+				+'\`\`!metiers liste\`\` renvoie la liste des différents métiers disponibles'+'\n'
+				+'\`\`!metiers ajout <metier> <niveau>\`\` Ajoute à l\'auteur du message le métier et le niveau de ce dernier (s\'il n\'a pas déjà le métier au niveau indiqué)'+'\n'
+				+'\`\`!metiers <pseudo>\`\` retourne la liste des métiers du joueur avec le pseudo <pseudo>'+'\n'
+				+'\`\`!artisans <metier>\`\` retourne la liste des joueurs avec le métier <metier>');
 		}
 	}
 });
@@ -153,14 +154,14 @@ function getDisplayName(message){
 	return message.guild.member(message.author).displayName;
 }
 
-function fancyJobs(jobs){
-	let fancyJobs='';
+function fancyjobs(jobs){
+	let fancyjobs='';
 
 	jobs.forEach(job=>{
-		fancyJobs+=job.name+' niveau '+job.level+'\n'
+		fancyjobs+=job.name+' niveau '+job.level+'\n'
 	});
 
-	return fancyJobs;
+	return fancyjobs;
 }
 
 function mySend(dest, message) {
