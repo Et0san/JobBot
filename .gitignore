@@ -2,3 +2,4 @@ node_modules
 myToken.json
 .metals/
 .vscode/
+data.json

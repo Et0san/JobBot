@@ -25,72 +25,106 @@ client.once('ready', () => {
 const perms = Discord.Permissions.FLAGS;
 
 const joblist = [
-	'Paysan',
+	'Alchimiste',
+	'Bijoutier',
+	'Boucher',
 	'Boulanger',
-	'Bijoutier'
+	'Bricoleur',
+	'Bûcheron',
+	'Chasseur',
+	'Cordonnier',
+	'Cordomage',
+	'Costumage',
+	'Forgeur dagues',
+	'Forgeur épées',
+	'Forgeur haches',
+	'Forgeur marteaux',
+	'Forgeur pelles',
+	'Forgemage dagues',
+	'Forgemage épées',
+	'Forgemage haches',
+	'Forgemage marteaux',
+	'Forgemage pelles',
+	'Joaillomage',
+	'Mineur',
+	'Paysan',
+	'Pêcheur',
+	'Poissonnier',
+	'Sculpteur baguettes',
+	'Sculpteur bâtons',
+	'Tailleur'
 ]
 
-const users = [
-	{ 
-		name: 'Test Cheh',
-		jobs: [{name: 'Paysan', level: 100}]
-	}
-]
-
+let users = [];
+const re = /!job add ([A-Za-zÀ-ÖØ-öø-ÿ]+( [A-Za-zÀ-ÖØ-öø-ÿ]+)*) (?<level>\d+)/;
 client.on('message', message => {
 	if(!message.author.bot){
 		if(message.content.match(/!jobs list/)){
-			mySend(message.channel, 'List of existing jobs:');
+			mySend(message.channel, 'Liste des métiers disponibles:');
 			mySend(message.channel, joblist.reduce((k, l)=>k+'\n'+l));
 
-		} else if(message.content.match(/!job add \w+ \d+/)){
-			let matcher = message.content.match(/!job add (\w+) (\d+)/);
+		} else if(message.content.match(re)){
+			let matcher = message.content.match(re);
+			const { groups: { level } } = re.exec(message.content);
 			const job = matcher[1];
-			const level = matcher[2];
 
 			if(joblist.filter(a=>a==job).length==0){
-				mySend(message.channel, job+' is not a job');
+				mySend(message.channel, job+' n\'est pas un métier');
 
 			} else {
-
-				if(users.filter(a=>a.name==getDisplayName(message) && a.jobs.filter(b=>b.name==job).length>0).length>0){
-					if(users.filter(a=>a.jobs.filter(b=>b.level==level)).length!=0){
-						mySend(message.channel, 'You already have this job with the same level!');
-					} else {
-						users[users.findIndex(a=>a.name==getDisplayName(message))].jobs[jobs.findIndex(b=>b.name==job)].level=level;
-					}
-				} else {
+				if(users.length!=0){
 					if(users.filter(a=>a.name==getDisplayName(message)).length==0){
-						
 						users.push({
 							name: getDisplayName(message),
 							jobs: []
 						})
 					}
+				} else{
+					users.push({
+							name: getDisplayName(message),
+							jobs: []
+						})
+				}
+				if(users.filter(a=>a.name==getDisplayName(message) && a.jobs.filter(b=>b.name==job).length>0).length>0){
+					if(users.filter(a=>a.jobs.filter(b=>b.level==level)).length!=0){
+						mySend(message.channel, 'Vous avez déjà ce niveau pour le métier concerné!');
+					} else {
+						users[users.findIndex(a=>a.name==getDisplayName(message))].jobs[jobs.findIndex(b=>b.name==job)].level=level;
+						let donnees = JSON.stringify(users)
+					fs.writeFileSync('data.json', donnees)
+					mySend(message.channel, 'Le métier '+job+' a été modifié pour le joueur '+getDisplayName(message)+' avec le niveau '+level);
+					}
+				} else {
+					
 					users[users.findIndex(a=>a.name==getDisplayName(message))].jobs.push({name: job, level: level});
-					mySend(message.channel, 'Job '+job+' added to '+getDisplayName(message)+' with level '+level);
+					let donnees = JSON.stringify(users)
+					fs.writeFileSync('data.json', donnees)
+					mySend(message.channel, 'Le métier '+job+' a été ajouté pour le joueur '+getDisplayName(message)+' avec le niveau '+level);
 				}
 			}
-
-		} else if(message.content.match(/!jobs whois .+/)){
-			let matcher = message.content.match(/!jobs whois (.+)/);
+			console.log(users);
+		} else if(message.content.match(/!jobs whois ([A-Za-zÀ-ÖØ-öø-ÿ]+( [A-Za-zÀ-ÖØ-öø-ÿ]+)*)/)){
+			let matcher = message.content.match(/!jobs whois ([A-Za-zÀ-ÖØ-öø-ÿ]+( [A-Za-zÀ-ÖØ-öø-ÿ]+)*)/);
 			const job = matcher[1];
 
 			if(joblist.filter(a=>a==job).length==0){
-				mySend(message.channel, job+' is not a job');
+				mySend(message.channel, job+' n\'est pas un métier');
 
 			} else {
-				mySend(message.channel, 'Who is '+job+ ':');
 
 				let users_jobs=[];
 				users.forEach(user=>{
 					const filterjob = user.jobs.filter(a=>a.name==job);
 					if(filterjob.length>0){
-						users_jobs.push(user.name+' level '+filterjob[0].level);
+						users_jobs.push(user.name+' niveau '+filterjob[0].level);
 					}
 				})
-
-				mySend(message.channel, users_jobs.reduce((k, l)=>k+', '+l));
+				if(users_jobs.length==0){
+					mySend(message.channel, 'Personne ne possède ce métier');
+				} else{
+					mySend(message.channel, 'Les joueurs avec comme métier '+job+ ':');
+					mySend(message.channel, users_jobs.reduce((k, l)=>k+', '+l));
+				}
 			}
 
 		} else if(message.content.match(/!jobs .+/)){
@@ -98,9 +132,9 @@ client.on('message', message => {
 			const pseudo = matcher[1];
 
 			if(users.filter(a=>a.name==pseudo).length==0){
-				mySend(message.channel, pseudo+' has no jobs');
+				mySend(message.channel, pseudo+' n\'a pas de métier');
 			} else {
-				mySend(message.channel, 'List of '+pseudo+'\'s jobs:');
+				mySend(message.channel, 'Liste des métiers de '+pseudo+':');
 				mySend(message.channel, fancyJobs(users.filter(a=>a.name==pseudo)[0].jobs));
 			}
 
@@ -123,7 +157,7 @@ function fancyJobs(jobs){
 	let fancyJobs='';
 
 	jobs.forEach(job=>{
-		fancyJobs+=job.name+' level '+job.level+'\n'
+		fancyJobs+=job.name+' niveau '+job.level+'\n'
 	});
 
 	return fancyJobs;
@@ -156,4 +190,7 @@ function parseEmotes(str) {
 
 // login to Discord with your app's token
 const tokenFile = fs.readFileSync("./myToken.json");
-client.login(JSON.parse(tokenFile).token).then(console.log('connected')).catch('an error has occured');
+client.login(JSON.parse(tokenFile).token).then(()=>{
+		console.log('connected');
+		users = JSON.parse(fs.readFileSync("data.json"));
+	}).catch('an error has occured');
