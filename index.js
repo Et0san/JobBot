@@ -107,7 +107,10 @@ client.on('message', message => {
 		}
 
 		if(message.content.match(/!help/)){
-
+			mySend(message.channel, '\`\`!help\`\` renvoie la liste de commandes de ce bot'+'\n'
+				+'\`\`!jobs list\`\` renvoie la liste des différents métiers disponibles'+'\n'
+				+'\`\`!job add <job> <nombre>\`\` Ajoute à l\'auteur du message le métier et le niveau de ce dernier s\'il n\'a pas déjà le métier au niveau indiqué'+'\n'
+				+'\`\`!jobs <pseudo>\`\` retourne la liste des métiers du joueur avec le pseudo <pseudo>');
 		}
 	}
 });
